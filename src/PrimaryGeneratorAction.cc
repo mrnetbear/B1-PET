@@ -92,9 +92,9 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(): G4VUserPrimaryGeneratorAction(
   
   // define generator position
 
-  G4double x0 = 0;
-  G4double y0 = 0;
-  G4double z0 = 0;
+  G4double x0 = 0*mm;
+  G4double y0 = 20*mm;
+  G4double z0 = 0*mm;
 
   
 

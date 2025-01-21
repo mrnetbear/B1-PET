@@ -58,7 +58,7 @@
 #include "G4UnitsTable.hh"
 
 const G4double rOfCircle = 63.75*mm;
-const G4int nOfDetectors = 64;
+const G4int nOfDetectors = 32;
 
 namespace B1
 {
@@ -114,7 +114,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
   const G4int nEntries = sizeof(photonEnergy)/sizeof(G4double);
 
-  //Lu2SiO5 (LYSO) 7.15 г/см3
+  //Lu2SiO5 (LSO) 7.40 г/см3
   
   G4Element* Lu = new G4Element("Lutetium", "Lu", z=71 , a=174.96*g/mole);
   G4Element* Si = new G4Element("Silicium", "Si", z=14 , a=28.085*g/mole);
@@ -126,6 +126,19 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   LSO->AddElement(Lu, natoms=nlLu);
   LSO->AddElement(Si, natoms=nlSi);
   LSO->AddElement(O, natoms=nlO);
+
+//Bi4Ge3O12 (BGO) 7.13 г/см3
+  
+  G4Element* Bi = new G4Element("Bismuthum", "Bi", z=83 , a=208.98*g/mole);
+  G4Element* Ge = new G4Element("Germаnium", "Ge", z=32 , a=72.63*g/mole);
+
+  G4double nbBi=4, nbGe=3, nbO=12;
+
+  G4Material* BGO = new G4Material("BGO", density= 7.13*g/cm3, 3);
+
+  BGO->AddElement(Bi, natoms=nbBi);
+  BGO->AddElement(Ge, natoms=nbGe);
+  BGO->AddElement(O, natoms=nbO);
 
 //
 // GAGG
@@ -155,10 +168,10 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   GAGG->SetMaterialPropertiesTable(myMPT1); 
 
 //
-// LYSO
+// LSO
 
   G4double refractiveIndexLu[] = {1.82, 1.82};
-  G4double absorptionLu[] = {1.1*cm, 1.1*cm};
+  G4double absorptionLu[] = {1.14*cm, 1.14*cm};
   G4double scintilFastLu[] = {0.19, 0.28};
   
   G4MaterialPropertiesTable* myMPT2 = new G4MaterialPropertiesTable();
@@ -173,6 +186,26 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   myMPT2->AddConstProperty("SCINTILLATIONYIELD1",0.18);
 
   LSO->SetMaterialPropertiesTable(myMPT2); 
+
+//
+// BGO
+
+  G4double refractiveIndexBi[] = {2.15, 2.15};
+  G4double absorptionBi[] = {1.118*cm, 1.118*cm};
+  G4double scintilFastBi[] = {0.19, 0.28};
+  
+  G4MaterialPropertiesTable* myMPT3 = new G4MaterialPropertiesTable();
+
+  myMPT3->AddProperty("RINDEX",       photonEnergy, refractiveIndexBi, nEntries);
+  myMPT3->AddProperty("ABSLENGTH",    photonEnergy, absorptionBi, nEntries);
+  myMPT3->AddProperty("SCINTILLATIONCOMPONENT1", photonEnergy, scintilFastBi, nEntries);
+        
+  myMPT3->AddConstProperty("SCINTILLATIONYIELD",0./MeV); 
+  myMPT3->AddConstProperty("RESOLUTIONSCALE",1.0);
+  myMPT3->AddConstProperty("SCINTILLATIONTIMECONSTANT1", 300*ns);
+  myMPT3->AddConstProperty("SCINTILLATIONYIELD1",0.18);
+
+  BGO->SetMaterialPropertiesTable(myMPT3); 
         
 //
 // SiPM features description
@@ -187,13 +220,13 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   G4double efficiencySiPM[] = {0.23, 0.23};
 
 
-  G4MaterialPropertiesTable* myMPT3 = new G4MaterialPropertiesTable();
+  G4MaterialPropertiesTable* myMPT4 = new G4MaterialPropertiesTable();
 
-  myMPT3->AddProperty("RINDEX", photonEnergy, refractiveIndexSiPM,nEntries, true);
-  myMPT3->AddProperty("ABSLENGTH", photonEnergy, absorptionSiPM, nEntries, true);    
-  myMPT3->AddProperty("EFFICIENCY",photonEnergy, efficiencySiPM, nEntries, true);
+  myMPT4->AddProperty("RINDEX", photonEnergy, refractiveIndexSiPM,nEntries, true);
+  myMPT4->AddProperty("ABSLENGTH", photonEnergy, absorptionSiPM, nEntries, true);    
+  myMPT4->AddProperty("EFFICIENCY",photonEnergy, efficiencySiPM, nEntries, true);
 
-  SiPM_mat->SetMaterialPropertiesTable(myMPT3);
+  SiPM_mat->SetMaterialPropertiesTable(myMPT4);
 
 
   //
@@ -239,7 +272,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   for (int i = 0; i < nOfDetectors; i++){
     shape = "Shape" + std::to_string(i);
     G4Box* solidShape = new G4Box(shape, shapeGAGG_dx, shapeGAGG_dy, shapeGAGG_dz);
-    G4LogicalVolume* logicShape = new G4LogicalVolume(solidShape, GAGG, shape);
+    G4LogicalVolume* logicShape = new G4LogicalVolume(solidShape, BGO, shape);
     double angle = 2 * Pi * i /nOfDetectors;
     double posX = 0;
     double posY = sin(angle) * rOfCircle;

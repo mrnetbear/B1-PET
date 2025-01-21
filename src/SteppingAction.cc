@@ -39,7 +39,7 @@
 #include "G4RunManager.hh"
 #include "G4LogicalVolume.hh"
 
-const G4int nOfVol = 64;
+const G4int nOfVol = 32;
 
 namespace B1
 {
